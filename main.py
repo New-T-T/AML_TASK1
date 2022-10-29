@@ -1,16 +1,9 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+import pandas as pd
+from preprocessing import preprocess
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    df_original = pd.read_csv('data/X_train.csv')
+    target_original = pd.read_csv('data/y_train.csv')
+    X_train, X_test, y_train, y_test = preprocess(df_original=df_original, target_original=target_original)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
