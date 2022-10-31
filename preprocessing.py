@@ -2,7 +2,26 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_selection import VarianceThreshold
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.ensemble import IsolationForest
+from sklearn.covariance import EllipticEnvelope
+import umap
+
+def remove_outliers(training_set, outlier_scores):
+    """
+    Computes and removes the outliers based on the outlier scores.
+    Modifies the scaled training set by removing the outliers from it.
+    :param training_set: scaled training set to be modified
+    :param outlier_scores: outlier scores computed by a previous algorithm
+    :return: void
+    """
+    outliers = training_set[outlier_scores == -1]
+    training_set = [x for x in training_set if not in outliers]
+
 
 def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.DataFrame:
     """
@@ -23,17 +42,48 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     # train test split using sklearn
     X_train, X_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=42)
 
+    """
     # Imputing missing values with median using sklearn
     imputer = SimpleImputer(strategy='median')
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
     X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
+    """
 
+    # Imputing missing values with the sklearn IterativeImputer
+    imputer = IterativeImputer(random_state=0)
+    imputer.fit(X_train)
+    X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
+    X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
+
+    """
     # Standardizing the features using sklearn
     scaler = StandardScaler()
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
+    """
+
+    # Standardizing the features using sklearn MinMaxScaler
+    scaler = MinMaxScaler()
+    scaler.fit(X_train_imputed)
+    X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
+    X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
+
+    # Reducing dimensionality with UMAP
+    reducer = umap.UMAP()
+    embedding = reducer.fit_transform(X_train_standardized)
+
+    # Removing outliers with LocalOutlierFactor
+    outlier_scores_lof = sklearn.neighbors.LocalOutlierFactor(contamination=0.001428).fit_predict(embedding.embedding_)
+    remove_outliers(X_training_set, outlier_scores_lof)
+
+    """
+    # NOTE: We can decide later which strategy works best, so I'm commenting it out for now.
+    # Removing outliers with EllipticEnvelope
+    outlier_scores_ee = sklearn.covariance.EllipticEnvelope(contamination = 0.1).fit_predict(embedding.embedding_)
+    remove_outliers(X_training_set, outlier_scores_ee)
+    """
 
     # Removing features with low variance using sklearn
     selector = VarianceThreshold(threshold=0.001)
@@ -56,5 +106,6 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     # Copying the dataframe for export
     X_train_preprocessed = X_train_correlation.copy(deep=True)
     X_test_preprocessed = X_test_correlation.copy(deep=True)
+
 
     return X_train_preprocessed, X_test_preprocessed, y_train, y_test
