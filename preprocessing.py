@@ -20,8 +20,15 @@ def remove_outliers(training_set, outlier_scores):
     :param outlier_scores: outlier scores computed by a previous algorithm
     :return: modified scaled training set
     """
-    outliers = training_set[outlier_scores == -1]
-    new_training_set = [x for x in training_set if x not in outliers]
+
+    removed_outliers = []
+
+    for index in range(0, len(outlier_scores)):
+        if outlier_scores[index] != -1:
+            removed_outliers.append(training_set.values.flatten()[index])
+
+    new_training_set = pd.DataFrame(removed_outliers)
+    print(new_training_set)
 
     return new_training_set
 
