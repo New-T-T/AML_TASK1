@@ -17,10 +17,12 @@ def remove_outliers(training_set, outlier_scores):
     Modifies the scaled training set by removing the outliers from it.
     :param training_set: scaled training set to be modified
     :param outlier_scores: outlier scores computed by a previous algorithm
-    :return: void
+    :return: modified scaled training set
     """
     outliers = training_set[outlier_scores == -1]
-    training_set = [x for x in training_set if not in outliers]
+    new_training_set = [x for x in training_set if not in outliers]
+
+    return new_training_set
 
 
 def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.DataFrame:
@@ -76,7 +78,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
 
     # Removing outliers with LocalOutlierFactor
     outlier_scores_lof = sklearn.neighbors.LocalOutlierFactor(contamination=0.001428).fit_predict(embedding.embedding_)
-    remove_outliers(X_training_set, outlier_scores_lof)
+    X_train_standardized = remove_outliers(X_train_standardized, outlier_scores_lof)
 
     """
     # NOTE: We can decide later which strategy works best, so I'm commenting it out for now.
