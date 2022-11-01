@@ -20,7 +20,7 @@ def remove_outliers(training_set, outlier_scores):
     :return: modified scaled training set
     """
     outliers = training_set[outlier_scores == -1]
-    new_training_set = [x for x in training_set if not in outliers]
+    new_training_set = [x for x in training_set if x not in outliers]
 
     return new_training_set
 
