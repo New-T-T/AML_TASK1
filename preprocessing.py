@@ -14,23 +14,18 @@ import umap
 
 def remove_outliers(training_set, outlier_scores):
     """
-    Computes and removes the outliers based on the outlier scores.
+    Removes the outliers based on the outlier scores.
     Modifies the scaled training set by removing the outliers from it.
     :param training_set: scaled training set to be modified
     :param outlier_scores: outlier scores computed by a previous algorithm
     :return: modified scaled training set
     """
 
-    removed_outliers = []
-
     for index in range(0, len(outlier_scores)):
-        if outlier_scores[index] != -1:
-            removed_outliers.append(training_set.values.flatten()[index])
+        if outlier_scores[index] == -1:
+            training_set = training_set.drop(index = index)
 
-    new_training_set = pd.DataFrame(removed_outliers)
-    print(new_training_set)
-
-    return new_training_set
+    return training_set
 
 
 def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.DataFrame:
@@ -67,7 +62,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
     X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
-    print("IterativeImputer:" + str(time.process_time() - start_iterative))
+    print("IterativeImputer time: " + str(time.process_time() - start_iterative))
     """
 
     """
@@ -84,19 +79,19 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
-    print("Scaler:" + str(time.process_time() - start_scaler))
+    print("scaler time: " + str(time.process_time() - start_scaler))
 
     start_umap = time.process_time()
     # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
     reducer = umap.UMAP()
     embedding = reducer.fit_transform(X_train_standardized)
-    print("UMAP:" + str(time.process_time() - start_umap))
+    print("UMAP time: " + str(time.process_time() - start_umap))
 
     start_outliers = time.process_time()
     # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
     outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
     X_train_standardized = remove_outliers(X_train_standardized, outlier_scores_lof)
-    print("outliers:" + str(time.process_time() - start_outliers))
+    print("outliers time: " + str(time.process_time() - start_outliers))
 
     """
     # NOTE: We can decide later which strategy works best, so I'm commenting it out for now.
