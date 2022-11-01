@@ -52,7 +52,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
     """
 
-    # Imputing missing values with the sklearn IterativeImputer
+    # Imputing missing values with the sklearn IterativeImputer, for more details see: https://towardsdatascience.com/iterative-imputation-with-scikit-learn-8f3eb22b1a38
     imputer = IterativeImputer(random_state=0)
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
@@ -72,17 +72,17 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
 
-    # Reducing dimensionality with UMAP
+    # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
     reducer = umap.UMAP()
     embedding = reducer.fit_transform(X_train_standardized)
 
-    # Removing outliers with LocalOutlierFactor
+    # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
     outlier_scores_lof = sklearn.neighbors.LocalOutlierFactor(contamination=0.001428).fit_predict(embedding.embedding_)
     X_train_standardized = remove_outliers(X_train_standardized, outlier_scores_lof)
 
     """
     # NOTE: We can decide later which strategy works best, so I'm commenting it out for now.
-    # Removing outliers with EllipticEnvelope
+    # Removing outliers with EllipticEnvelope, for more details see: https://towardsdatascience.com/machine-learning-for-anomaly-detection-elliptic-envelope-2c90528df0a6
     outlier_scores_ee = sklearn.covariance.EllipticEnvelope(contamination = 0.1).fit_predict(embedding.embedding_)
     remove_outliers(X_training_set, outlier_scores_ee)
     """
