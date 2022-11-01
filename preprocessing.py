@@ -12,11 +12,13 @@ from sklearn.ensemble import IsolationForest
 from sklearn.covariance import EllipticEnvelope
 import umap
 
-def remove_outliers(training_set, outlier_scores):
+# warning: weird non-deterministic behaviour
+def remove_outliers(training_set, training_labels, outlier_scores):
     """
     Removes the outliers based on the outlier scores.
     Modifies the scaled training set by removing the outliers from it.
     :param training_set: scaled training set to be modified
+    :param training_labels: labels associateed with the training set
     :param outlier_scores: outlier scores computed by a previous algorithm
     :return: modified scaled training set
     """
@@ -24,8 +26,9 @@ def remove_outliers(training_set, outlier_scores):
     for index in range(0, len(outlier_scores)):
         if outlier_scores[index] == -1:
             training_set = training_set.drop(index = index)
+            training_labels = training_labels.drop(index = index)
 
-    return training_set
+    return training_set, training_labels
 
 
 def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.DataFrame:
@@ -90,7 +93,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     start_outliers = time.process_time()
     # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
     outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
-    X_train_standardized = remove_outliers(X_train_standardized, outlier_scores_lof)
+    X_train_standardized, y_train = remove_outliers(X_train_standardized, y_train, outlier_scores_lof)
     print("outliers time: " + str(time.process_time() - start_outliers))
 
     """
@@ -121,6 +124,5 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     # Copying the dataframe for export
     X_train_preprocessed = X_train_correlation.copy(deep=True)
     X_test_preprocessed = X_test_correlation.copy(deep=True)
-
 
     return X_train_preprocessed, X_test_preprocessed, y_train, y_test
