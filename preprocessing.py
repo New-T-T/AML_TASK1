@@ -11,6 +11,7 @@ from sklearn.neighbors import LocalOutlierFactor
 from sklearn.ensemble import IsolationForest
 from sklearn.covariance import EllipticEnvelope
 import umap
+from colorama import Fore, Style
 
 # warning: weird non-deterministic behaviour
 def remove_outliers(training_set, training_labels, outlier_scores):
@@ -31,7 +32,7 @@ def remove_outliers(training_set, training_labels, outlier_scores):
     return training_set, training_labels
 
 
-def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.DataFrame:
+def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose: bool, timing: bool, seed) -> pd.DataFrame:
     """
     Creates a train and test set from the original data.
     Preprocess the independent features (i.e X) in 4 steps:
@@ -48,15 +49,25 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     df_original.drop('id', axis=1, inplace=True)
 
     # train test split using sklearn
-    X_train, X_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=42)
+    if verbose:
+        print("Train-test split")
+    X_train, X_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=seed)
 
 
     # Imputing missing values with median using sklearn
+    if verbose:
+        print("Imputing")
+    if timing:
+        start_imputer = time.process_time()
     imputer = SimpleImputer(strategy='median')
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
     X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
-
+    if verbose:
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} Imputer time: {Fore.YELLOW}{time.process_time() - start_imputer:.2f}{Style.RESET_ALL} seconds")
+        print("Scaling")
 
     """
     start_iterative = time.process_time()
@@ -74,27 +85,50 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
+    
+    if verbose:
+        print("StandardScaler time: " + str(time.process_time() - start_standardize))
     """
 
-    start_scaler = time.process_time()
+    if timing:
+        start_scaler = time.process_time()
+
     # Standardizing the features using sklearn MinMaxScaler
     scaler = MinMaxScaler()
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
-    print("scaler time: " + str(time.process_time() - start_scaler))
 
-    start_umap = time.process_time()
+    if verbose:
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} MinMaxScaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
+        print("UMAP")
+
+    if timing:
+        start_umap = time.process_time()
     # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
-    reducer = umap.UMAP()
+    reducer = umap.UMAP(random_state=seed)
     embedding = reducer.fit_transform(X_train_standardized)
-    print("UMAP time: " + str(time.process_time() - start_umap))
+    if verbose:
+        if timing:
+            # fstring
+            print(f"{'':<1} UMAP time: {time.process_time() - start_umap} seconds")
 
     start_outliers = time.process_time()
     # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
     outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
     X_train_standardized, y_train = remove_outliers(X_train_standardized, y_train, outlier_scores_lof)
-    print("outliers time: " + str(time.process_time() - start_outliers))
+    if verbose:
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} LocalOutlierFactor time: {Fore.YELLOW}{time.process_time() - start_outliers:.2f}{Style.RESET_ALL} seconds")
+        # displaying the number of outliers removed in green
+        print(f"{'':<1} Number of outliers removed: {Fore.GREEN}{len(outlier_scores_lof) - sum(outlier_scores_lof == 1)}{Style.RESET_ALL}")
+        # displaying the shape of the training set
+        print(f"{'':<1} Shape of the training set: {X_train_standardized.shape}")
+
+        print("Variance thresholding")
 
     """
     # NOTE: We can decide later which strategy works best, so I'm commenting it out for now.
@@ -104,12 +138,24 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
     """
 
     # Removing features with low variance using sklearn
+    if timing:
+        start_variance = time.process_time()
     selector = VarianceThreshold(threshold=0.001)
     selector.fit(X_train_standardized)
     X_train_variance = pd.DataFrame(selector.transform(X_train_standardized), columns=X_train_standardized.columns[selector.get_support()])
     X_test_variance = pd.DataFrame(selector.transform(X_test_standardized), columns=X_train_standardized.columns[selector.get_support()])
+    if verbose:
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} VarianceThreshold time: {Fore.YELLOW}{time.process_time() - start_variance:.2f}{Style.RESET_ALL} seconds")
+        # displaying the number of features removed in green
+        print(f"{'':<1} Number of features removed: {Fore.GREEN}{len(X_train_standardized.columns) - len(X_train_variance.columns)}{Style.RESET_ALL}")
+        # displaying the shape of the training set
+        print(f"{'':<1} Shape of the training set: {X_train_variance.shape}")
+        print("Correlation thresholding")
 
     # Removing highly correlated features using sklearn and Pearson correlation
+    start_correlation = time.process_time()
     correlated_features = set()
     X_train_correlation_matrix = X_train_variance.corr()
     for i in range(len(X_train_correlation_matrix.columns)):
@@ -120,6 +166,14 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame) -> pd.D
 
     X_train_correlation = X_train_variance.drop(labels=correlated_features, axis=1)
     X_test_correlation = X_test_variance.drop(labels=correlated_features, axis=1)
+    if verbose:
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} CorrelationThreshold time: {Fore.YELLOW}{time.process_time() - start_correlation:.2f}{Style.RESET_ALL} seconds")
+        # displaying the number of features removed in green
+        print(f"{'':<1} Number of features removed: {Fore.GREEN}{len(X_train_variance.columns) - len(X_train_correlation.columns)}{Style.RESET_ALL}")
+        # displaying the shape of the training set
+        print(f"{'':<1} Shape of the training set: {X_train_correlation.shape}")
 
     # Copying the dataframe for export
     X_train_preprocessed = X_train_correlation.copy(deep=True)
