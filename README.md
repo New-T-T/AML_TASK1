@@ -46,3 +46,21 @@
 - Feature selection: 
   - Sequential Feature Selection (SFS) using Random Forest Regressor : [medium](https://towardsdatascience.com/5-feature-selection-method-from-scikit-learn-you-should-know-ed4d116e4172)
     - WARNING: SUPER LONG TO RUN
+- Outlier detection: 
+  - UMAP: 
+    - Stochastic process: fixing the seed 
+    - official [documentation](https://umap-learn.readthedocs.io/en/latest/index.html)
+    - Basic parameters for optimization: [Basic UMAP Parameters](https://umap-learn.readthedocs.io/en/latest/parameters.html)
+
+
+## TODO
+- Maja 
+  - [ ] Add a simple explanation in the README and in the docstrings about outlier detection ("outlier score"???)
+  - Outlier detection
+    - [ ] Make it remove more than 2 outliers
+    - [ ] Apply the same method on the TEST set
+- Tristan
+  - Feature selection: 
+    - [ ] Think of better methods
+- Yves
+  - [ ] Grid search for the best parameters of the regressor

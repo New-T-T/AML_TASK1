@@ -108,7 +108,9 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     if timing:
         start_umap = time.process_time()
     # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
-    reducer = umap.UMAP(random_state=seed)
+    # Official documentation: https://umap-learn.readthedocs.io/en/latest/index.html
+    # Basic parameters: https://umap-learn.readthedocs.io/en/latest/parameters.html
+    reducer = umap.UMAP(random_state=seed)  # Fixing the seed according to: https://umap-learn.readthedocs.io/en/latest/reproducibility.html
     embedding = reducer.fit_transform(X_train_standardized)
     if verbose:
         if timing:
@@ -119,6 +121,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
     outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
     X_train_standardized, y_train = remove_outliers(X_train_standardized, y_train, outlier_scores_lof)
+    # TODO: Do the same for the test set
     if verbose:
         if timing:
             # display the only the time in yellow
