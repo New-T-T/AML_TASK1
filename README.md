@@ -66,6 +66,9 @@
     - Nb of simulations: 
       - CV * n_alphas  
         - default = 5 * 100 = 500
+    - links 
+      - https://stats.stackexchange.com/questions/68562/what-does-it-mean-if-all-the-coefficient-estimates-in-a-lasso-regression-converg
+      - 
   - Sequential Feature Selection (SFS) using Random Forest Regressor : [medium](https://towardsdatascience.com/5-feature-selection-method-from-scikit-learn-you-should-know-ed4d116e4172)
     - WARNING: SUPER LONG TO RUN
 - Outlier detection: 
