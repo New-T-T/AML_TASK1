@@ -32,7 +32,7 @@ def remove_outliers(training_set, training_labels, outlier_scores):
     return training_set, training_labels
 
 
-def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose: bool, timing: bool, seed) -> pd.DataFrame:
+def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test: pd.DataFrame, verbose: bool, timing: bool, seed) -> pd.DataFrame:
     """
     Creates a train and test set from the original data.
     Preprocess the independent features (i.e X) in 4 steps:
@@ -47,12 +47,13 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     """
     # Removing the column id as it redundant
     df_original.drop('id', axis=1, inplace=True)
+    target_original.drop('id', axis=1, inplace=True)
+    X_test.drop('id', axis=1, inplace=True)
 
     # train test split using sklearn
     if verbose:
         print("Train-test split")
-    X_train, X_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=seed)
-
+    X_train, X_train_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=seed)
 
     # Imputing missing values with median using sklearn
     if verbose:
@@ -62,7 +63,8 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     imputer = SimpleImputer(strategy='median')
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
-    X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
+    X_train_test_imputed = pd.DataFrame(imputer.transform(X_train_test), columns=X_train.columns)
+    X_test = pd.DataFrame(imputer.transform(X_test), columns=X_test.columns)
     if verbose:
         if timing:
             # display the only the time in yellow
@@ -75,34 +77,30 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     imputer = IterativeImputer(random_state=0, verbose=2)
     imputer.fit(X_train)
     X_train_imputed = pd.DataFrame(imputer.transform(X_train), columns=X_train.columns)
-    X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=X_train.columns)
+    X_train_test_imputed = pd.DataFrame(imputer.transform(X_train_test), columns=X_train.columns)
     print("IterativeImputer time: " + str(time.process_time() - start_iterative))
-    """
-
-    """
-    # Standardizing the features using sklearn
-    scaler = StandardScaler()
-    scaler.fit(X_train_imputed)
-    X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
-    X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
-    
-    if verbose:
-        print("StandardScaler time: " + str(time.process_time() - start_standardize))
     """
 
     if timing:
         start_scaler = time.process_time()
 
-    # Standardizing the features using sklearn MinMaxScaler
-    scaler = MinMaxScaler()
+    # Standardizing the features using sklearn
+    scaler = StandardScaler()
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
-    X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
+    X_train_test_standardized = pd.DataFrame(scaler.transform(X_train_test_imputed), columns=X_train_imputed.columns)
+    X_test_standardized = pd.DataFrame(scaler.transform(X_test), columns=X_test.columns)
+
+    # # Standardizing the features using sklearn MinMaxScaler
+    # scaler = MinMaxScaler()
+    # scaler.fit(X_train_imputed)
+    # X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
+    # X_train_test_standardized = pd.DataFrame(scaler.transform(X_train_test_imputed), columns=X_train_imputed.columns)
 
     if verbose:
         if timing:
             # display the only the time in yellow
-            print(f"{'':<1} MinMaxScaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
+            print(f"{'':<1} Scaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
         print("UMAP")
 
     if timing:
@@ -146,7 +144,8 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     selector = VarianceThreshold(threshold=0.001)
     selector.fit(X_train_standardized)
     X_train_variance = pd.DataFrame(selector.transform(X_train_standardized), columns=X_train_standardized.columns[selector.get_support()])
-    X_test_variance = pd.DataFrame(selector.transform(X_test_standardized), columns=X_train_standardized.columns[selector.get_support()])
+    X_train_test_variance = pd.DataFrame(selector.transform(X_train_test_standardized), columns=X_train_standardized.columns[selector.get_support()])
+    X_test_variance = pd.DataFrame(selector.transform(X_test_standardized), columns=X_test_standardized.columns[selector.get_support()])
     if verbose:
         if timing:
             # display the only the time in yellow
@@ -168,6 +167,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
                 correlated_features.add(colname)
 
     X_train_correlation = X_train_variance.drop(labels=correlated_features, axis=1)
+    X_train_test_correlation = X_train_test_variance.drop(labels=correlated_features, axis=1)
     X_test_correlation = X_test_variance.drop(labels=correlated_features, axis=1)
     if verbose:
         if timing:
@@ -180,6 +180,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
 
     # Copying the dataframe for export
     X_train_preprocessed = X_train_correlation.copy(deep=True)
+    X_train_test_preprocessed = X_train_test_correlation.copy(deep=True)
     X_test_preprocessed = X_test_correlation.copy(deep=True)
 
-    return X_train_preprocessed, X_test_preprocessed, y_train, y_test
+    return X_train_preprocessed, X_train_test_preprocessed, y_train, y_test, X_test_preprocessed
