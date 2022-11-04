@@ -44,6 +44,28 @@
   - Removing low variance features: using `VarianceThreshold` from `sklearn.feature_selection`
   - Removing correlated features : [Section: Removing Correlated Features](https://stackabuse.com/applying-filter-methods-in-python-for-feature-selection/)
 - Feature selection: 
+  - Lasso regression: using `LassoCV` from `sklearn.linear_model`
+    - General idea: 
+      - Lasso regression is a linear model that estimates sparse coefficients
+      - The LassoCV object performs Lasso regression with built-in cross-validation
+      - The optimal value of the regularization parameter is selected by cross-validation
+      - The coefficients of the model are then used to select the most important features
+    - Sklearn hyperparameters: 
+      - `alphas`: array of alpha values to try
+        - Default: not clear
+        - TODO: uderstand
+      - `eps`: float, optional
+        - Length of the path. `eps=1e-3` means that `alpha_min / alpha_max = 1e-3`.
+        - Default: `1e-3`
+      - `n_alphas`: int, optional
+        - Number of alphas along the regularization path
+        - Default: `100`
+      - `cv`: number of folds in cross-validation
+      - `max_iter`: maximum number of iterations to perform
+      - `tol`: tolerance for the optimization
+    - Nb of simulations: 
+      - CV * n_alphas  
+        - default = 5 * 100 = 500
   - Sequential Feature Selection (SFS) using Random Forest Regressor : [medium](https://towardsdatascience.com/5-feature-selection-method-from-scikit-learn-you-should-know-ed4d116e4172)
     - WARNING: SUPER LONG TO RUN
 - Outlier detection: 
@@ -59,8 +81,12 @@
   - Outlier detection
     - [ ] Make it remove more than 2 outliers
     - [ ] Apply the same method on the TEST set
+    - [ ] DBSCAN 
+  - [ ] Iterative imputer: save the dataset
 - Tristan
   - Feature selection: 
-    - [ ] Think of better methods
+    - [ ] ANOVA 
+    - [ ] SFS 
+    - [ ] FDR
 - Yves
   - [ ] Grid search for the best parameters of the regressor

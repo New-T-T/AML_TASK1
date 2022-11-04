@@ -47,12 +47,12 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     """
     # Removing the column id as it redundant
     df_original.drop('id', axis=1, inplace=True)
+    target_original.drop('id', axis=1, inplace=True)
 
     # train test split using sklearn
     if verbose:
         print("Train-test split")
     X_train, X_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=seed)
-
 
     # Imputing missing values with median using sklearn
     if verbose:
@@ -79,30 +79,25 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, verbose
     print("IterativeImputer time: " + str(time.process_time() - start_iterative))
     """
 
-    """
+    if timing:
+        start_scaler = time.process_time()
+
     # Standardizing the features using sklearn
     scaler = StandardScaler()
     scaler.fit(X_train_imputed)
     X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
     X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
-    
-    if verbose:
-        print("StandardScaler time: " + str(time.process_time() - start_standardize))
-    """
 
-    if timing:
-        start_scaler = time.process_time()
-
-    # Standardizing the features using sklearn MinMaxScaler
-    scaler = MinMaxScaler()
-    scaler.fit(X_train_imputed)
-    X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
-    X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
+    # # Standardizing the features using sklearn MinMaxScaler
+    # scaler = MinMaxScaler()
+    # scaler.fit(X_train_imputed)
+    # X_train_standardized = pd.DataFrame(scaler.transform(X_train_imputed), columns=X_train_imputed.columns)
+    # X_test_standardized = pd.DataFrame(scaler.transform(X_test_imputed), columns=X_train_imputed.columns)
 
     if verbose:
         if timing:
             # display the only the time in yellow
-            print(f"{'':<1} MinMaxScaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
+            print(f"{'':<1} Scaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
         print("UMAP")
 
     if timing:
