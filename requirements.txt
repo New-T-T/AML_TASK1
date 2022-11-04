@@ -83,3 +83,4 @@ wcwidth==0.2.5
 webencodings==0.5.1
 websocket-client==1.4.1
 widgetsnbextension==4.0.3
+xgboost==1.6.2

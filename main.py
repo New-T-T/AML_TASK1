@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+
+import regressor
 from preprocessing import preprocess
 
 
@@ -11,4 +14,17 @@ if __name__ == '__main__':
                                                   timing=True,
                                                   seed=40)
 
+    print(y_train)
+    reg = regressor.StackedRegressor()
+    #reg.gridSearchSeperate(X_train,y_train.drop(columns=['id']).to_numpy().ravel())
+    reg.from_best_params()
+    X_total = X_train.join(X_test)
+    y_total = y_train.join(y_test)
+    reg.fit(X_total,y_total.drop(columns=['id']).to_numpy().ravel())
+    y_pred_final = reg.predict(???????????????)
 
+    ### Output to file
+    output_df = pd.DataFrame(y_pred_final, columns=['y'])
+    output_df.to_csv("output_final.csv")
+    output_df = output_df.round(1)
+    output_df.to_csv("output_3.csv")
