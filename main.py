@@ -20,19 +20,26 @@ if __name__ == '__main__':
                                                                      verbose=True,
                                                                      timing=True,
                                                                      seed=40)
-    dummy_rfe_regression(X_train, y_train, X_train_test, y_train_test, verbose=True, timing=True)
 
-    print(y_train)
+
     reg = regressor.StackedRegressor()
     #reg.gridSearchSeperate(X_train,y_train.drop(columns=['id']).to_numpy().ravel())
     reg.from_best_params()
-    X_total = X_train.join(X_test)
-    y_total = y_train.join(y_test)
-    reg.fit(X_total,y_total.drop(columns=['id']).to_numpy().ravel())
-    y_pred_final = reg.predict(???????????????)
+    X_total = pd.concat([X_train,X_train_test])
+    y_total = pd.concat([y_train,y_train_test])
+    print(X_total)
+    print(y_total)
+    print("Start fitting")
+    reg.fit(X_total,y_total.to_numpy().ravel())
+    print("Start predicting")
+    y_pred_final = reg.make_prediction(X_test)
 
     ### Output to file
-    output_df = pd.DataFrame(y_pred_final, columns=['y'])
+    print("y_pred_final size/shape")
+    print(y_pred_final.shape)
+    print(y_pred_final.size)
+    array_with_id = np.array(np.linspace(1,y_pred_final.size,y_pred_final.size),np.array(y_pred_final))
+    output_df = pd.DataFrame(array_with_id, columns=['id','y'])
     output_df.to_csv("output_final.csv")
     output_df = output_df.round(1)
-    output_df.to_csv("output_3.csv")
+    output_df.to_csv("output_final_rounded.csv")

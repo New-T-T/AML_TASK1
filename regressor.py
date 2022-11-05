@@ -24,7 +24,7 @@ BEST_ESTIMATORS = [
     ('lr', RidgeCV()),
     ('svr', LinearSVR(random_state=42,epsilon=0.01,C=1)),
     ('xgb', XGBRegressor(learning_rate=0.03,max_depth=4,min_child_weight=2,subsample=0.4,colsample_bytree=0.8,n_estimators=4000,reg_lambda=0.01)),    #Specify vie XGBREGRESSOR
-    ('ada', AdaBoostRegressor(n_estimator=2000)), #Specify via Adaboost regressor
+    ('ada', AdaBoostRegressor(n_estimators=2000)), #Specify via Adaboost regressor
     ('gauss', GaussianProcessRegressor(kernel=DotProduct() + WhiteKernel())) #Specify via GAUSSIANPROCESSREGRESSOR
 ]
 
@@ -32,7 +32,7 @@ BEST_ESTIMATORS = [
 #over the stacked regressor
 GS_PARAMS = {
     "svr__epsilon": [0, 0.01, 0.1, 0.3],
-    "svr__C": [1],
+    "svr__C": [10],
     "xgb__learning_rate":[0.01, 0.03, 0.1],
     "xgb__n_estimators":[100, 2500, 4000, 6000],
     "xgb__max_depth":[4,8,10],
