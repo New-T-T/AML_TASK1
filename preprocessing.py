@@ -37,6 +37,8 @@ def preprocess(df_original: pd.DataFrame,
                target_original: pd.DataFrame,
                X_test: pd.DataFrame,
                outlier_method: str,
+               contamination: float,
+               dbscan_min_samples: int,
                verbose: bool, timing: bool, seed) -> pd.DataFrame:
     """
     Creates a train and test set from the original data.
@@ -149,7 +151,7 @@ def preprocess(df_original: pd.DataFrame,
         if timing:
             start_isolation = time.process_time()
         # Removing outliers with IsolationForest, for reference see: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
-        outlier_scores_isolation = IsolationForest(n_estimators=1000, contamination=0.06, n_jobs=2, random_state=seed).fit_predict(X_train_standardized)
+        outlier_scores_isolation = IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed).fit_predict(X_train_standardized)
         X_train_standardized = X_train_standardized[outlier_scores_isolation != -1]
         y_train = y_train[outlier_scores_isolation != -1]
         if verbose:
@@ -165,7 +167,7 @@ def preprocess(df_original: pd.DataFrame,
         if timing:
             start_dbscan = time.process_time()
         # Removing outliers with DBSCAN, for reference see: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
-        outlier_scores_dbscan = DBSCAN(eps=36, min_samples=10, n_jobs=2).fit_predict(X_train_standardized)
+        outlier_scores_dbscan = DBSCAN(eps=36, min_samples=dbscan_min_samples, n_jobs=2).fit_predict(X_train_standardized)
         # Dropping the outliers based on the labels of outlier_scores_dbscan
         X_train_standardized = X_train_standardized[outlier_scores_dbscan != -1]
         y_train = y_train[outlier_scores_dbscan != -1]

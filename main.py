@@ -9,7 +9,10 @@ if __name__ == '__main__':
                                                                            target_original=target_original,
                                                                            X_test=X_test,
                                                                            outlier_method='IsolationForest',
-                                                                           alpha=0.5, # 0.4 : 107, 0.3 :
+                                                                           contamination=0.04,
+                                                                           dbscan_min_samples=10, # TODO: useless when IsolationForest is used
+                                                                           feature_selection_method='FDR',
+                                                                           alpha=0.01, # 0.4 : 107, 0.3 :
                                                                            verbose=True,
                                                                            timing=True,
                                                                            seed=40)
