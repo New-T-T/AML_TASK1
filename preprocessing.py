@@ -13,24 +13,132 @@ from sklearn.covariance import EllipticEnvelope
 import umap
 from colorama import Fore, Style
 from sklearn.cluster import DBSCAN
+from imblearn.pipeline import Pipeline
 
 # warning: weird non-deterministic behaviour
-def remove_outliers(training_set, training_labels, outlier_scores):
+def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbscan_min_samples: int, seed: int, verbose: int):
     """
-    Removes the outliers based on the outlier scores.
-    Modifies the scaled training set by removing the outliers from it.
-    :param training_set: scaled training set to be modified
-    :param training_labels: labels associateed with the training set
-    :param outlier_scores: outlier scores computed by a previous algorithm
-    :return: modified scaled training set
+    :param X_train: training set
+    :param X_test: test set
+    :param outlier_method: method to use to remove outliers
     """
+    if verbose >= 1:
+        print(f"Removing outliers using {outlier_method}")
+    if outlier_method == "IsolationForest":
+        outlier_scores = IsolationForest(n_estimators=1000,
+                                         contamination=contamination,
+                                         n_jobs=2,
+                                         random_state=seed).fit_predict(X_train)
+    elif outlier_method == "DBSCAN":
+        outlier_scores = DBSCAN(eps=36, min_samples=dbscan_min_samples, n_jobs=2).fit_predict(X_train)
 
-    for index in range(0, len(outlier_scores)):
-        if outlier_scores[index] == -1:
-            training_set = training_set.drop(index = index)
-            training_labels = training_labels.drop(index = index)
+    X_train = X_train[outlier_scores != -1]
+    y_train = y_train[outlier_scores != -1]
+    if verbose >= 2:
+        print(f"{'':<1} Shape of the training set: {X_train.shape}")
+    return X_train, y_train
 
-    return training_set, training_labels
+
+def remove_highly_correlated_features(X_train, X_test, threshold: float = 0.9, verbose: bool = False, timing: bool = False):
+    if verbose >= 1:
+        print(f"{'':<1} Removing highly correlated features")
+    correlated_features = set()
+    X_train_correlation_matrix = X_train.corr()
+    for i in range(len(X_train_correlation_matrix.columns)):
+        for j in range(i):
+            if abs(X_train_correlation_matrix.iloc[i, j]) > threshold:
+                colname = X_train_correlation_matrix.columns[i]
+                correlated_features.add(colname)
+
+    X_train = X_train.drop(labels=correlated_features, axis=1)
+    X_test = X_test.drop(labels=correlated_features, axis=1)
+    if verbose >= 2:
+        print(f"{'':<1} Shape of the training set: {X_train.shape}")
+    return X_train, X_test
+
+
+def preprocess(df_original: pd.DataFrame,
+               target_original: pd.DataFrame,
+               X_test: pd.DataFrame,
+               outlier_method: str,
+               contamination: float,
+               dbscan_min_samples: int,
+               training: bool,
+               verbose: bool, timing: bool, seed) -> pd.DataFrame:
+    """
+    Preprocesses the data.
+    :param df_original: original dataframe
+    :param target_original: original target dataframe
+    :param outlier_method: outlier detection method
+    :param contamination: contamination parameter for the outlier detection method
+    :param dbscan_min_samples: min_samples parameter for the DBSCAN algorithm
+    :param verbose: whether to print the progress
+    :param timing: whether to print the timing
+    :param seed: seed for the random number generator
+    :return: preprocessed dataframe
+    """
+    # Making sure parameters are correct
+    #assert outlier_method in ['None', 'LocalOutlierFactor', 'IsolationForest', 'EllipticEnvelope'], "outlier_method must be in ['None', 'LocalOutlierFactor', 'IsolationForest', 'EllipticEnvelope']"
+    assert outlier_method in ['UMAP', 'IsolationForest', 'DBSCAN'], "outlier_method must be in ['UMAP', 'IsolationForest', 'DBSCAN']"
+
+    # Removing the column id as it redundant
+    df_original.drop('id', axis=1, inplace=True)
+    target_original.drop('id', axis=1, inplace=True)
+    X_train = None
+    y_train = None
+    X_train_test = None
+    y_train_test = None
+
+    if training:
+        X_train, X_train_test, y_train, y_train_test = train_test_split(df_original, target_original, test_size=0.15,
+                                                                        random_state=seed)
+    else:
+        X_train = df_original
+        y_train = target_original
+
+    # Creating the preprocessing pipeline
+    # 1. Imputation
+    # 2. Scaling
+    preprocessing_pipeline = Pipeline(steps=[
+        ('imputation', SimpleImputer(strategy='median')),
+        ('scaling', StandardScaler()),
+        #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
+        #('variance_threshold', VarianceThreshold(threshold=0.001))
+    ])
+
+    if verbose >= 1:
+        print("Imputing and scaling the training set")
+    X_train = pd.DataFrame(preprocessing_pipeline.fit_transform(X_train, y_train), columns=X_train.columns)
+
+    X_train, y_train = remove_outliers(X_train, y_train, outlier_method, contamination, dbscan_min_samples, seed, verbose)
+    if verbose >= 2:
+        print(f"{'':<1} Shape of the training set: {X_train.shape}")
+
+    if verbose >= 1:
+        print("Removing highly correlated features")
+    selector = VarianceThreshold(threshold=0.001)
+    selector.fit(X_train)
+    X_train = pd.DataFrame(selector.transform(X_train), columns=X_train.columns[selector.get_support()])
+    if verbose >= 2:
+        print(f"{'':<1} Shape of the training set: {X_train.shape}")
+
+    if training:
+        X_train_test = pd.DataFrame(preprocessing_pipeline.transform(X_train_test), columns=X_train_test.columns)
+        X_train_test = pd.DataFrame(selector.transform(X_train_test),
+                                    columns=X_train_test.columns[selector.get_support()])
+        # Removing highly correlated features using sklearn and Pearson correlation
+        X_train, X_train_test = remove_highly_correlated_features(X_train, X_train_test, verbose=verbose, timing=timing)
+        return X_train, X_train_test, y_train, y_train_test
+
+    else:
+        X_test = pd.DataFrame(preprocessing_pipeline.transform(X_test), columns=X_test.columns)
+        X_test = pd.DataFrame(selector.transform(X_test), columns=X_test.columns[selector.get_support()])
+        # Removing highly correlated features using sklearn and Pearson correlation
+        X_train, X_test = remove_highly_correlated_features(X_train, X_test, verbose=verbose, timing=timing)
+        return X_train, X_test, y_train
+
+
+
 
 
 def preprocess_train(df_original: pd.DataFrame,
