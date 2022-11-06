@@ -17,6 +17,7 @@ from imblearn.pipeline import Pipeline
 
 def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbscan_min_samples: int, seed: int, verbose: int):
     """
+    Remove outliers from the dataset. Can use IsolationForest or DBSCAN.
     :param X_train: training set
     :param X_test: test set
     :param outlier_method: method to use to remove outliers
@@ -39,6 +40,14 @@ def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbsc
 
 
 def remove_highly_correlated_features(X_train, X_test, threshold: float = 0.9, verbose: bool = False):
+    """
+    Remove highly correlated features from the dataset.
+    :param X_train: training set
+    :param X_test: test set
+    :param threshold: threshold for the correlation between features above which the features are removed
+    :param verbose: verbosity level
+    :return: X_train, X_test without highly correlated features
+    """
     if verbose >= 1:
         print(f"Removing highly correlated features")
     correlated_features = set()
@@ -64,7 +73,14 @@ def preprocess(df_original: pd.DataFrame,
                dbscan_min_samples: int,
                training: bool, verbose: bool, seed: int) -> pd.DataFrame:
     """
-    Preprocesses the data.
+    Preprocesses the data. The pipeline is as follows:
+    0. Train/test split (if training is True)
+    1. Impute missing values
+    2. Scale the data
+    3. Remove outliers (can be done using IsolationForest or DBSCAN)
+    4. Remove low variance features
+    5. Remove highly correlated features
+
     :param df_original: original dataframe
     :param target_original: original target dataframe
     :param outlier_method: outlier detection method
@@ -82,6 +98,7 @@ def preprocess(df_original: pd.DataFrame,
     # Removing the column id as it redundant
     df_original.drop('id', axis=1, inplace=True)
     target_original.drop('id', axis=1, inplace=True)
+    X_test.drop('id', axis=1, inplace=True)
     X_train = None
     y_train = None
     X_train_test = None
