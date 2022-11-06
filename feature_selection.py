@@ -10,12 +10,18 @@ from colorama import Fore, Style
 import time
 
 
-def select_features(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test: pd.DataFrame, alpha: float, verbose: bool = True,
+def select_features(df_original: pd.DataFrame,
+                    target_original: pd.DataFrame,
+                    X_test: pd.DataFrame,
+                    outlier_method: str,
+                    alpha: float,
+                    verbose: bool = True,
                     timing: bool = True, seed: int = 40) -> pd.DataFrame:
     X_train, X_train_test, y_train, y_train_test, X_test = preprocess(df_original=df_original,
-                                                                target_original=target_original,
-                                                                X_test=X_test,
-                                                                verbose=True, timing=True, seed=seed)
+                                                                      target_original=target_original,
+                                                                      X_test=X_test,
+                                                                      outlier_method=outlier_method,
+                                                                      verbose=True, timing=True, seed=seed)
     if verbose:
         print("Feature selection")
     start_time = time.process_time()
@@ -26,8 +32,8 @@ def select_features(df_original: pd.DataFrame, target_original: pd.DataFrame, X_
     if verbose:
         if timing:
             print(f"{'':<1} Feature selection time: {Fore.YELLOW}{time.process_time() - start_time:.2f}{Style.RESET_ALL} seconds")
-        print(f"{'':<1} Lasso best score: {colorama.Fore.RED}{lasso.score(X_train, y_train)}{colorama.Style.RESET_ALL}")
-        print(f"{'':<1} Lasso best coef: {lasso.coef_}")
+        # print(f"{'':<1} Lasso best score: {colorama.Fore.RED}{lasso.score(X_train, y_train)}{colorama.Style.RESET_ALL}")
+        # print(f"{'':<1} Lasso best coef: {lasso.coef_}")
         print(
             f"{'':<1} Lasso picked {colorama.Fore.RED}{sum(lasso.coef_ != 0)}{colorama.Style.RESET_ALL} features and eliminated the other {colorama.Fore.RED}{sum(lasso.coef_ == 0)}{colorama.Style.RESET_ALL} features")
 

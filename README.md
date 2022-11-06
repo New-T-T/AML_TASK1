@@ -76,7 +76,11 @@
     - Stochastic process: fixing the seed 
     - official [documentation](https://umap-learn.readthedocs.io/en/latest/index.html)
     - Basic parameters for optimization: [Basic UMAP Parameters](https://umap-learn.readthedocs.io/en/latest/parameters.html)
-
+  - Isolation Forest: 
+    - official [documentation](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html)
+  - DBSCAN: 
+    - official [documentation](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html)
+    - Good article to understand: [Medium](https://medium.com/@dilip.voleti/dbscan-algorithm-for-fraud-detection-outlier-detection-in-a-data-set-60a10ad06ea8)
 
 ## TODO
 - Maja 

@@ -12,6 +12,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.covariance import EllipticEnvelope
 import umap
 from colorama import Fore, Style
+from sklearn.cluster import DBSCAN
 
 # warning: weird non-deterministic behaviour
 def remove_outliers(training_set, training_labels, outlier_scores):
@@ -32,7 +33,11 @@ def remove_outliers(training_set, training_labels, outlier_scores):
     return training_set, training_labels
 
 
-def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test: pd.DataFrame, verbose: bool, timing: bool, seed) -> pd.DataFrame:
+def preprocess(df_original: pd.DataFrame,
+               target_original: pd.DataFrame,
+               X_test: pd.DataFrame,
+               outlier_method: str,
+               verbose: bool, timing: bool, seed) -> pd.DataFrame:
     """
     Creates a train and test set from the original data.
     Preprocess the independent features (i.e X) in 4 steps:
@@ -43,8 +48,17 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test:
     Leave the dependent feature (i.e y) untouched (only split into train and test set).
     :param df_original: original dataframe to preprocess
     :param target_original: original target dataframe to preprocess
+    :param X_test: original test dataframe to preprocess
+    :param outlier_method: method to use to remove outliers
+    :param verbose: boolean to print or not the preprocessing steps
+    :param timing: boolean to print or not the preprocessing steps timing
+    :param seed: seed to use for the random state
     :return: X_train_preprocess, X_test_preprocess, y_train, y_test
     """
+    # Making sure parameters are correct
+    #assert outlier_method in ['None', 'LocalOutlierFactor', 'IsolationForest', 'EllipticEnvelope'], "outlier_method must be in ['None', 'LocalOutlierFactor', 'IsolationForest', 'EllipticEnvelope']"
+    assert outlier_method in ['UMAP', 'IsolationForest', 'DBSCAN'], "outlier_method must be in ['UMAP', 'IsolationForest', 'DBSCAN']"
+
     # Removing the column id as it redundant
     df_original.drop('id', axis=1, inplace=True)
     target_original.drop('id', axis=1, inplace=True)
@@ -53,7 +67,7 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test:
     # train test split using sklearn
     if verbose:
         print("Train-test split")
-    X_train, X_train_test, y_train, y_test = train_test_split(df_original, target_original, test_size=0.2, random_state=seed)
+    X_train, X_train_test, y_train, y_train_test = train_test_split(df_original, target_original, test_size=0.15, random_state=seed)
 
     # Imputing missing values with median using sklearn
     if verbose:
@@ -101,33 +115,74 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test:
         if timing:
             # display the only the time in yellow
             print(f"{'':<1} Scaler time: {Fore.YELLOW}{time.process_time() - start_scaler:.2f}{Style.RESET_ALL} seconds")
-        print("UMAP")
-
-    if timing:
-        start_umap = time.process_time()
-    # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
-    # Official documentation: https://umap-learn.readthedocs.io/en/latest/index.html
-    # Basic parameters: https://umap-learn.readthedocs.io/en/latest/parameters.html
-    reducer = umap.UMAP(random_state=seed)  # Fixing the seed according to: https://umap-learn.readthedocs.io/en/latest/reproducibility.html
-    embedding = reducer.fit_transform(X_train_standardized)
-    if verbose:
-        if timing:
-            # fstring
-            print(f"{'':<1} UMAP time: {time.process_time() - start_umap} seconds")
+        print("Outliers detection")
 
     start_outliers = time.process_time()
-    # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
-    outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
-    X_train_standardized, y_train = remove_outliers(X_train_standardized, y_train, outlier_scores_lof)
-    # TODO: Do the same for the test set
-    if verbose:
+
+    # Outliers detection can be done using UMAP, IsolationForest or DBSCAN
+    if outlier_method == 'UMAP':
+        if verbose:
+            print(f"{'':<1} UMAP")
         if timing:
-            # display the only the time in yellow
-            print(f"{'':<1} LocalOutlierFactor time: {Fore.YELLOW}{time.process_time() - start_outliers:.2f}{Style.RESET_ALL} seconds")
-        # displaying the number of outliers removed in green
-        print(f"{'':<1} Number of outliers removed: {Fore.GREEN}{len(outlier_scores_lof) - sum(outlier_scores_lof == 1)}{Style.RESET_ALL}")
+            start_umap = time.process_time()
+        # Reducing dimensionality with UMAP, for more details see: https://arxiv.org/abs/1802.03426
+        # Official documentation: https://umap-learn.readthedocs.io/en/latest/index.html
+        # Basic parameters: https://umap-learn.readthedocs.io/en/latest/parameters.html
+        reducer = umap.UMAP(random_state=seed)  # Fixing the seed according to: https://umap-learn.readthedocs.io/en/latest/reproducibility.html
+        embedding = reducer.fit_transform(X_train_standardized)
+        if verbose:
+            if timing:
+                # fstring
+                print(f"{'':<1} UMAP time: {time.process_time() - start_umap} seconds")
+
+        # Removing outliers with LocalOutlierFactor, for reference see: https://scikit-learn.org/stable/auto_examples/neighbors/plot_lof_outlier_detection.html
+        outlier_scores_lof = LocalOutlierFactor(contamination=0.001428).fit_predict(embedding)
+        X_train_standardized, y_train = remove_outliers(X_train_standardized, y_train, outlier_scores_lof)
+       # TODO: Do the same for the test set, NOT SURE IF THIS IS CORRECT
+        if verbose:
+            # displaying the number of outliers removed in green
+            print(f"{'':<1} Number of outliers removed: {Fore.GREEN}{len(outlier_scores_lof) - sum(outlier_scores_lof == 1)}{Style.RESET_ALL}")
+
+    elif outlier_method == 'IsolationForest':
+        if verbose:
+            print(f"{'':<1} IsolationForest")
+        if timing:
+            start_isolation = time.process_time()
+        # Removing outliers with IsolationForest, for reference see: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
+        outlier_scores_isolation = IsolationForest(n_estimators=1000, contamination=0.06, n_jobs=2, random_state=seed).fit_predict(X_train_standardized)
+        X_train_standardized = X_train_standardized[outlier_scores_isolation != -1]
+        y_train = y_train[outlier_scores_isolation != -1]
+        if verbose:
+            if timing:
+                # fstring
+                print(f"{'':<1} IsolationForest time: {time.process_time() - start_isolation} seconds")
+            # displaying the number of outliers removed in green
+            print(f"{'':<1} Number of outliers removed: {Fore.GREEN}{sum(outlier_scores_isolation == -1)}{Style.RESET_ALL}")
+
+    elif outlier_method == 'DBSCAN':
+        if verbose:
+            print(f"{'':<1} DBSCAN")
+        if timing:
+            start_dbscan = time.process_time()
+        # Removing outliers with DBSCAN, for reference see: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+        outlier_scores_dbscan = DBSCAN(eps=36, min_samples=10, n_jobs=2).fit_predict(X_train_standardized)
+        # Dropping the outliers based on the labels of outlier_scores_dbscan
+        X_train_standardized = X_train_standardized[outlier_scores_dbscan != -1]
+        y_train = y_train[outlier_scores_dbscan != -1]
+        if verbose:
+            if timing:
+                # fstring
+                print(f"{'':<1} DBSCAN time: {time.process_time() - start_dbscan} seconds")
+            # displaying the number of outliers removed in green
+            print(f"{'':<1} Number of outliers removed: {Fore.GREEN}{sum(outlier_scores_dbscan == -1)}{Style.RESET_ALL}")
+
+
+    if verbose:
         # displaying the shape of the training set
         print(f"{'':<1} Shape of the training set: {X_train_standardized.shape}")
+        if timing:
+            # display the only the time in yellow
+            print(f"{'':<1} Outlier detection time: {Fore.YELLOW}{time.process_time() - start_outliers:.2f}{Style.RESET_ALL} seconds")
 
         print("Variance thresholding")
 
@@ -183,4 +238,4 @@ def preprocess(df_original: pd.DataFrame, target_original: pd.DataFrame, X_test:
     X_train_test_preprocessed = X_train_test_correlation.copy(deep=True)
     X_test_preprocessed = X_test_correlation.copy(deep=True)
 
-    return X_train_preprocessed, X_train_test_preprocessed, y_train, y_test, X_test_preprocessed
+    return X_train_preprocessed, X_train_test_preprocessed, y_train, y_train_test, X_test_preprocessed
