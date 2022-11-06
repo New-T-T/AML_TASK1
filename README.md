@@ -72,6 +72,8 @@
   - Sequential Feature Selection (SFS) using Random Forest Regressor : [medium](https://towardsdatascience.com/5-feature-selection-method-from-scikit-learn-you-should-know-ed4d116e4172)
     - WARNING: SUPER LONG TO RUN
 - Outlier detection: 
+  - <span style="color:red"> QUESTION: should we do outlier detection before or after train-test split? </span>
+  - <span style="color:red"> QUESTION: are we sure the data to predict doesn't contain outliers? </span>
   - UMAP: 
     - Stochastic process: fixing the seed 
     - official [documentation](https://umap-learn.readthedocs.io/en/latest/index.html)
