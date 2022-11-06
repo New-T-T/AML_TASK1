@@ -1,6 +1,6 @@
 import pandas as pd
-from preprocessing import preprocess_train, preprocess_predict, preprocess
-from feature_selection import select_features_train, select_features_predict, dummy_rfe_regression, dummy_rfe_regression_predict
+from preprocessing import preprocess
+from feature_selection import select_features, select_features_predict, dummy_rfe_regression, dummy_rfe_regression_predict
 
 if __name__ == '__main__':
     SEED = 40
@@ -20,18 +20,16 @@ if __name__ == '__main__':
                                                                   outlier_method='IsolationForest',
                                                                   contamination=0.04,
                                                                   dbscan_min_samples=10, # TODO: useless when IsolationForest is used
-                                                                  verbose=True, timing=True, seed=SEED)
+                                                                  verbose=True, seed=SEED)
 
-
-        X_train, X_train_test, y_train, y_train_test = select_features_train(X_train=X_train,
-                                                                             X_train_test=X_train_test,
-                                                                             y_train=y_train,
-                                                                             y_train_test=y_train_test,
-                                                                             feature_selection_method='FDR',
-                                                                             alpha=0.01,
-                                                                             verbose=True,
-                                                                             timing=True,
-                                                                             seed=SEED)
+        X_train, X_train_test = select_features(X_train=X_train,
+                                                y_train=y_train,
+                                                X_test=X_train_test,
+                                                feature_selection_method='FDR',
+                                                alpha=0.01,
+                                                verbose=True,
+                                                timing=True,
+                                                )
         dummy_rfe_regression(X_train, y_train, X_train_test, y_train_test, verbose=True, timing=True)
     else:
         X_train, y_train, X_test = preprocess_predict(df_original=pd.read_csv('data/X_train.csv'),

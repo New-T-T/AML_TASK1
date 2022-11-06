@@ -9,18 +9,17 @@ import colorama
 from colorama import Fore, Style
 import time
 
+def select_features(X_train: pd.DataFrame,
+                    y_train: pd.DataFrame,
+                    X_test: pd.DataFrame,
+                    feature_selection_method: str,
+                    alpha: float,
+                    verbose: int,
+                    timing: bool = True) -> pd.DataFrame:
 
-def select_features_train(X_train: pd.DataFrame,
-                          X_train_test: pd.DataFrame,
-                          y_train: pd.DataFrame,
-                          y_train_test: pd.DataFrame,
-                          feature_selection_method: str,
-                          alpha: float,
-                          verbose: bool = True,
-                          timing: bool = True, seed: int = 40) -> pd.DataFrame:
-
-    if verbose:
+    if verbose >= 1:
         print("Feature selection")
+
     if timing:
         start_time = time.process_time()
 
@@ -29,23 +28,17 @@ def select_features_train(X_train: pd.DataFrame,
                       fit_intercept=False,
                       max_iter=10000,
                       tol=0.001).fit(X_train, y_train.values.ravel())
-        if verbose:
+        if verbose >= 1:
             if timing:
-                print(f"{'':<1} Feature selection time: {Fore.YELLOW}{time.process_time() - start_time:.2f}{Style.RESET_ALL} seconds")
-            # print(f"{'':<1} Lasso best score: {colorama.Fore.RED}{lasso.score(X_train, y_train)}{colorama.Style.RESET_ALL}")
-            # print(f"{'':<1} Lasso best coef: {lasso.coef_}")
-            print(
-                f"{'':<1} Lasso picked {colorama.Fore.RED}{sum(lasso.coef_ != 0)}{colorama.Style.RESET_ALL} features and eliminated the other {colorama.Fore.RED}{sum(lasso.coef_ == 0)}{colorama.Style.RESET_ALL} features")
-
-        # compute the r2 score on the test set
-        y_pred = lasso.predict(X_train_test)
-        print(f"{'':<1} Lasso test r2 score: {colorama.Fore.GREEN}{r2_score(y_train_test, y_pred)}{colorama.Style.RESET_ALL}")
+                print(f"{'':<1} Feature selection time: "
+                      f"{Fore.YELLOW}{time.process_time() - start_time:.2f}{Style.RESET_ALL} seconds")
+            if verbose >= 2:
+                print(f"{'':<1} Lasso picked {colorama.Fore.RED}{sum(lasso.coef_ != 0)}{colorama.Style.RESET_ALL} "
+                      f"features and eliminated the other "
+                      f"{colorama.Fore.RED}{sum(lasso.coef_ == 0)}{colorama.Style.RESET_ALL} features")
 
         # Create a mask for the selected features
         mask = lasso.coef_ != 0
-        # Apply the mask to the feature dataset
-        X_train_selected = X_train.loc[:, mask]
-        X_train_test_selected = X_train_test.loc[:, mask]
 
     elif feature_selection_method == 'FDR':
         fdr = SelectFdr(f_regression, alpha=alpha).fit(X_train, y_train.values.ravel())
@@ -58,9 +51,12 @@ def select_features_train(X_train: pd.DataFrame,
         # Create a mask for the selected features
         mask = fdr.get_support()
         # Apply the mask to the feature dataset
-        X_train_selected = X_train.loc[:, mask]
-        X_train_test_selected = X_train_test.loc[:, mask]
-    return X_train_selected, X_train_test_selected, y_train, y_train_test
+
+    # Apply the mask to the feature dataset
+    X_train = X_train.loc[:, mask]
+    X_test = X_test.loc[:, mask]
+
+    return X_train, X_test
 
 def select_features_predict(X_train: pd.DataFrame,
                             y_train: pd.DataFrame,
