@@ -1,6 +1,6 @@
 import pandas as pd
 from preprocessing import preprocess
-from feature_selection import select_features, select_features_predict, dummy_rfe_regression, dummy_rfe_regression_predict
+from feature_selection import select_features, dummy_rfe_regression, dummy_rfe_regression_predict
 
 if __name__ == '__main__':
     SEED = 40
