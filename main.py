@@ -1,6 +1,10 @@
 import pandas as pd
+
+import regressor
 from preprocessing import preprocess
 from feature_selection import select_features, dummy_rfe_regression, dummy_rfe_regression_predict
+
+
 
 if __name__ == '__main__':
     SEED = 40
@@ -41,7 +45,15 @@ if __name__ == '__main__':
                                           verbose=True,
                                           timing=True,
                                           )
-        y_predict = dummy_rfe_regression_predict(X_train, y_train, X_test, verbose=True, timing=True)
+
+        reg = regressor.StackedRegressor()
+        print(X_train.shape)
+        print(y_train.shape)
+        reg.gridSearchSeperate(X_train, y_train)
+        reg.from_best_params()
+        y_pred_final = reg.make_prediction(X_test)
+
+
         y_predict = pd.DataFrame(y_predict)
         y_predict.columns = ['y']
         y_predict.to_csv('data/y_predict.csv', index=True, index_label='id')
