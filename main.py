@@ -17,7 +17,7 @@ if __name__ == '__main__':
                                                                   outlier_method='IsolationForest', # 'DBSCAN' or 'IsolationForest'
                                                                   contamination=0.04, # contamination parameter for IsolationForest, percentage of outliers in the dataset
                                                                   dbscan_min_samples=10, # TODO: useless when IsolationForest is used
-                                                                  verbose=True, seed=SEED)
+                                                                  verbose=2, seed=SEED)
 
         X_train, X_train_test = select_features(X_train=X_train,
                                                 y_train=y_train,
@@ -36,7 +36,7 @@ if __name__ == '__main__':
                                               outlier_method='IsolationForest',
                                               contamination=0.04,
                                               dbscan_min_samples=10, # TODO: useless when IsolationForest is used
-                                              verbose=True, seed=SEED)
+                                              verbose=2, seed=SEED)
         X_train, X_test = select_features(X_train=X_train,
                                           y_train=y_train,
                                           X_test=X_test,
@@ -57,5 +57,3 @@ if __name__ == '__main__':
         y_predict = pd.DataFrame(y_predict)
         y_predict.columns = ['y']
         y_predict.to_csv('data/y_predict.csv', index=True, index_label='id')
-
-
