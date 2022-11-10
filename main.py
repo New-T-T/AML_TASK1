@@ -4,11 +4,11 @@ import regressor
 from preprocessing import preprocess
 from feature_selection import select_features, dummy_rfe_regression, dummy_rfe_regression_predict
 
-
+from sklearn.metrics import r2_score
 
 if __name__ == '__main__':
     SEED = 40
-    training = False
+    training = True
     if training:
         X_train, X_train_test, y_train, y_train_test = preprocess(df_original=pd.read_csv('data/X_train.csv'),
                                                                   target_original=pd.read_csv('data/y_train.csv'),
@@ -47,11 +47,11 @@ if __name__ == '__main__':
                                           )
 
         reg = regressor.StackedRegressor()
-        print(X_train.shape)
-        print(y_train.shape)
-        reg.gridSearchSeperate(X_train, y_train)
-        reg.from_best_params()
-        y_pred_final = reg.make_prediction(X_test)
+        reg.gridsearchseperate(X_train,y_train.values.ravel())
+        #reg.from_best_params()
+        reg.fit(X_train,y_train.values.ravel())
+        y_predict = reg.make_prediction(X_test)
+
 
 
         y_predict = pd.DataFrame(y_predict)
