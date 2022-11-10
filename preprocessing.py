@@ -15,22 +15,6 @@ from colorama import Fore, Style
 from sklearn.cluster import DBSCAN
 from imblearn.pipeline import Pipeline
 
-def remove_outliers_from_data(training_set, training_labels, outlier_scores):
-     """
-     Removes the outliers based on the outlier scores.
-     Modifies the scaled training set by removing the outliers from it.
-     :param training_set: scaled training set to be modified
-     :param training_labels: labels associateed with the training set
-     :param outlier_scores: outlier scores computed by a previous algorithm
-     :return: modified scaled training set
-     """
-
-     for index in range(0, len(outlier_scores)):
-         if outlier_scores[index] == -1:
-             training_set = training_set.drop(index = index)
-             training_labels = training_labels.drop(index = index)
-
-     return training_set, training_labels
 
 def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbscan_min_samples: int, seed: int, verbose: int):
     """
@@ -43,10 +27,6 @@ def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbsc
     reducer = umap.UMAP(random_state=seed)
     embedding = reducer.fit_transform(X_train)
 
-    # Removing outliers with LocalOutlierFactor
-    #outlier_scores_lof = sklearn.neighbors.LocalOutlierFactor(contamination=0.001428).fit_predict(embedding.embedding_)
-    #remove_outliers(X_training_set, outlier_scores_lof)
-
     if verbose >= 1:
         print(f"Removing outliers using {outlier_method}")
     if outlier_method == "IsolationForest":
@@ -57,10 +37,8 @@ def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbsc
     elif outlier_method == "DBSCAN":
         outlier_scores = DBSCAN(eps=36, min_samples=dbscan_min_samples, n_jobs=2).fit_predict(embedding.embedding_)
 
-    #X_train = X_train[outlier_scores != -1]
-    #y_train = y_train[outlier_scores != -1]
-
-    X_train, y_train = remove_outliers_from_data(X_train, y_train, outlier_scores)
+    X_train = X_train[outlier_scores != -1]
+    y_train = y_train[outlier_scores != -1]
 
     if verbose >= 2:
         print(f"{'':<1} Shape of the training set: {X_train.shape}")
