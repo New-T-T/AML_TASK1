@@ -16,7 +16,6 @@ entrypoints==0.4
 executing==1.1.1
 fastjsonschema==2.16.2
 idna==3.4
-imblearn==0.9.1
 ipykernel==6.16.2
 ipython==8.5.0
 ipython-genutils==0.2.0
@@ -84,3 +83,9 @@ wcwidth==0.2.5
 webencodings==0.5.1
 websocket-client==1.4.1
 widgetsnbextension==4.0.3
+imblearn==0.0
+xgboost==1.7.1
+catboost==1.1.1
+imbalanced-learn==0.9.1
+imblearn==0.0
+
