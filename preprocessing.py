@@ -40,8 +40,7 @@ def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbsc
     :param outlier_method: method to use to remove outliers
     """
     # Reducing dimensionality with UMAP
-    reducer = umap.UMAP()
-    #reducer.fit(X_train)
+    reducer = umap.UMAP(random_state=seed)
     embedding = reducer.fit_transform(X_train)
 
     # Removing outliers with LocalOutlierFactor
