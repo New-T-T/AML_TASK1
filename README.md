@@ -86,7 +86,12 @@
   - DBSCAN: 
     - official [documentation](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html)
     - Good article to understand: [Medium](https://medium.com/@dilip.voleti/dbscan-algorithm-for-fraud-detection-outlier-detection-in-a-data-set-60a10ad06ea8)
-
+  - Regressor: 
+    - Sklearn StackingRegressor [documentation](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.StackingRegressor.html)
+    - Estimators: RidgeCV,LinearSVR,XGBRegressor,AdaBoostRegressor,GaussianRegressor,GradientBoostingRegressor,LGBMRegressor,CatBoostRegressor, ElasticNet, BayesianRidge,KernelRidge (not all converging)
+    - GridSearchCV: [documentation](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html)
+    - BayesSearch [documentation](https://scikit-optimize.github.io/stable/modules/generated/skopt.BayesSearchCV.html)
+    
 ## TODO
 - Maja 
   - [ ] Add a simple explanation in the README and in the docstrings about outlier detection ("outlier score"???)
@@ -101,4 +106,16 @@
     - [ ] SFS 
     - [ ] FDR
 - Yves
-  - [ ] Grid search for the best parameters of the regressor
+  - [ ] GridSearch including preprocessing
+  - [ ]	Optimize for meta regressor (the RidgeCV combining the estimators)
+  - [ ] Execute extensive GridSearch per regressor >> just extending, narrowing the search space manually since the space is just too big
+  - [ ] Find Best combination for Stacking
+  - [ ] Look into non converging Regressors >> probaly just because of poor parameter choice
+     - [ ] RidgeCV
+     - [ ] SVR
+     - [ ] ElastiNet
+  - Clean Code
+  - [optional]
+  	- Stacking of StackingRegressors >> I belive this is what Team 1 did from last year
+  	- BayesSearchCV >> Statistical Hyperparameter tuning
+  	
