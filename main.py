@@ -15,6 +15,7 @@ if __name__ == '__main__':
                                                                   target_original=pd.read_csv('data/y_train.csv'),
                                                                   X_test=pd.read_csv('data/X_test.csv'),
                                                                   training=training,
+                                                                  ii_enabled=True,
                                                                   outlier_method='IsolationForest',  # 'DBSCAN' or 'IsolationForest'
                                                                   umap_enabled=False,  # [True, False]
                                                                   if_contamination=0.04,  # contamination parameter for IsolationForest, percentage of outliers in the dataset: [0.04, 0.06, 0.08, 0.1]
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         X_train, X_train_test = select_features(X_train=X_train,
                                                 y_train=y_train,
                                                 X_test=X_train_test,
-                                                feature_selection_method='DFR', # ['FDR', 'lasso', 'ExtraTrees']
+                                                feature_selection_method='FDR', # ['FDR', 'lasso', 'ExtraTrees']
                                                 alpha=0.01, # FDR and Lasso, higher = less features selected. [0.01, 0.05, 0.1, 0.2, 0.5]
                                                 et_n_best=100,
                                                 verbose=2,
@@ -39,6 +40,7 @@ if __name__ == '__main__':
                                               target_original=pd.read_csv('data/y_train.csv'),
                                               X_test=pd.read_csv('data/X_test.csv'),
                                               training=training,
+                                              ii_enabled=True,
                                               outlier_method='IsolationForest',
                                               umap_enabled=True,
                                               if_contamination=0.04,
@@ -52,6 +54,7 @@ if __name__ == '__main__':
                                           X_test=X_test,
                                           feature_selection_method='FDR',
                                           alpha=0.01,
+                                          et_n_best=100,
                                           verbose=True,
                                           timing=True,
                                           )

@@ -132,6 +132,7 @@ def remove_highly_correlated_features(X_train, X_test, threshold: float = 0.9, v
 def preprocess(df_original: pd.DataFrame,
                target_original: pd.DataFrame,
                X_test: pd.DataFrame,
+               ii_enabled: bool,
                outlier_method: str,
                umap_enabled: bool,
                if_contamination: float,
@@ -180,8 +181,12 @@ def preprocess(df_original: pd.DataFrame,
     if training:
         # Splitting the data into training and test sets
         print(f"Splitting the data into training and test sets (85/15)")
+
         X_train, X_train_test, y_train, y_train_test = train_test_split(df_original, target_original, test_size=0.15,
                                                                         random_state=seed)
+        if ii_enabled:
+            X_train = pd.read_pickle('data/X_train_imp.pkl', compression='gzip')
+            X_train_test = pd.read_pickle('data/X_train_test_imp.pkl', compression='gzip')
     else:
         print(f"NO SPLITTING of the data into training and test sets")
         X_train = df_original
@@ -190,18 +195,29 @@ def preprocess(df_original: pd.DataFrame,
     # Creating a (simple, for now) preprocessing pipeline
     # 1. Imputation
     # 2. Scaling
-    preprocessing_pipeline = Pipeline(steps=[
-        #('imputation', SimpleImputer(strategy='median')),
-        ('scaling', StandardScaler()),
-        #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
-        #('variance_threshold', VarianceThreshold(threshold=0.001))
-    ])
+    if ii_enabled:
+        preprocessing_pipeline = Pipeline(steps=[
+            #('imputation', SimpleImputer(strategy='median')),
+            ('scaling', StandardScaler()),
+            #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
+            #('variance_threshold', VarianceThreshold(threshold=0.001))
+        ])
+    else:
+        preprocessing_pipeline = Pipeline(steps=[
+            ('imputation', SimpleImputer(strategy='median')),
+            ('scaling', StandardScaler()),
+            #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
+            #('variance_threshold', VarianceThreshold(threshold=0.001))
+        ])
+
 
     # Imputing and scaling the data
     if verbose >= 1:
-        print("Imputing and scaling the training set")
+        if ii_enabled:
+            print(f"Scaling the data (imputing already done)")
+        else:
+            print("Imputing (SimpleImputer) and scaling the training set")
 
-    X_train = pd.read_pickle('imputer.pkl', compression='gzip')
     X_train_index = X_train.copy().index
     X_train = pd.DataFrame(preprocessing_pipeline.fit_transform(X_train, y_train), columns=X_train.columns,
                            index=X_train_index)
