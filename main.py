@@ -27,9 +27,10 @@ if __name__ == '__main__':
         X_train, X_train_test = select_features(X_train=X_train,
                                                 y_train=y_train,
                                                 X_test=X_train_test,
-                                                feature_selection_method='FDR', # ['FDR', 'lasso']
+                                                feature_selection_method='DFR', # ['FDR', 'lasso', 'ExtraTrees']
                                                 alpha=0.01, # FDR and Lasso, higher = less features selected. [0.01, 0.05, 0.1, 0.2, 0.5]
-                                                verbose=True,
+                                                et_n_best=100,
+                                                verbose=2,
                                                 timing=True,
                                                 )
         dummy_rfe_regression(X_train, y_train, X_train_test, y_train_test, verbose=True, timing=True)

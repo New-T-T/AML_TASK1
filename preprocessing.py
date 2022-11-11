@@ -100,7 +100,7 @@ def remove_outliers(X_train, y_train, outlier_method, umap_enabled: bool, if_con
     return X_train, y_train
 
 
-def remove_highly_correlated_features(X_train, X_test, threshold: float = 0.9, verbose: bool = False):
+def remove_highly_correlated_features(X_train, X_test, threshold: float = 0.9, verbose: int = 1):
     """
     Remove highly correlated features from the dataset.
     :param X_train: training set
@@ -136,7 +136,7 @@ def preprocess(df_original: pd.DataFrame,
                dbs_min_samples: int,
                dbs_eps: int,
                n_jobs: int,
-               training: bool, verbose: bool, seed: int) -> pd.DataFrame:
+               training: bool, verbose: int, seed: int) -> pd.DataFrame:
     """
     Preprocesses the data. The pipeline is as follows:
     0. Train/test split (if training is True)
