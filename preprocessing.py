@@ -118,7 +118,7 @@ def preprocess(df_original: pd.DataFrame,
     # 1. Imputation
     # 2. Scaling
     preprocessing_pipeline = Pipeline(steps=[
-        ('imputation', SimpleImputer(strategy='median')),
+        #('imputation', SimpleImputer(strategy='median')),
         ('scaling', StandardScaler()),
         #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
         #('variance_threshold', VarianceThreshold(threshold=0.001))
@@ -127,6 +127,7 @@ def preprocess(df_original: pd.DataFrame,
     # Imputing and scaling the data
     if verbose >= 1:
         print("Imputing and scaling the training set")
+    X_train = pd.read_pickle('imputer.pkl', compression='gzip')
     X_train = pd.DataFrame(preprocessing_pipeline.fit_transform(X_train, y_train), columns=X_train.columns)
 
     # Removing outliers
