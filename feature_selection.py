@@ -1,7 +1,7 @@
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import Lasso
 from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.ensemble import RandomForestRegressor # TO REMOVE when dummy regressor will be removed
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor # TO REMOVE when dummy regressor will be removed
 from sklearn.feature_selection import SelectFdr, f_regression
 import numpy as np
 import pandas as pd
@@ -14,6 +14,7 @@ def select_features(X_train: pd.DataFrame,
                     X_test: pd.DataFrame,
                     feature_selection_method: str,
                     alpha: float,
+                    et_n_best: int,
                     verbose: int,
                     timing: bool = True) -> pd.DataFrame:
     """
@@ -30,7 +31,7 @@ def select_features(X_train: pd.DataFrame,
     """
 
     if verbose >= 1:
-        print("Feature selection")
+        print(f"Feature selection: using {feature_selection_method} method")
 
     if timing:
         start_time = time.process_time()
@@ -64,6 +65,22 @@ def select_features(X_train: pd.DataFrame,
 
         # Create a mask for the selected features
         mask = fdr.get_support()
+    elif feature_selection_method == 'ExtraTrees':
+        etr = ExtraTreesRegressor(n_estimators=150, max_depth=20, random_state=0, min_samples_split=2,
+                                  min_samples_leaf=1)
+        etr.fit(X_train, y_train.values.ravel())
+        if verbose >= 1:
+            if timing:
+                print(f"{'':<1} Feature selection time: {Fore.YELLOW}{time.process_time() - start_time:.2f}{Style.RESET_ALL} seconds")
+            if verbose >= 2:
+                print(f"{'':<1} ExtraTrees picked {colorama.Fore.RED}{sum(etr.feature_importances_ != 0)}{colorama.Style.RESET_ALL} "
+                      f"features and eliminated the other "
+                      f"{colorama.Fore.RED}{sum(etr.feature_importances_ == 0)}{colorama.Style.RESET_ALL} features")
+
+        # Create a mask for the n_best features
+        mask_df = pd.DataFrame(etr.feature_importances_, index=X_train.columns).sort_values(by=0, ascending=False)
+        id_selected_features = mask_df.index[:et_n_best]
+        mask = [True if feature in id_selected_features else False for feature in X_train.columns]
 
     # Apply the mask to the feature dataset to remove the unselected features
     X_train = X_train.loc[:, mask]
