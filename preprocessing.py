@@ -14,6 +14,7 @@ import umap
 from colorama import Fore, Style
 from sklearn.cluster import DBSCAN
 from imblearn.pipeline import Pipeline
+import pickle
 
 def remove_outliers_from_data(training_set, training_labels, outlier_scores):
     """
@@ -52,6 +53,10 @@ def remove_outliers(X_train, y_train, outlier_method, umap_enabled: bool, if_con
     :param n_jobs: number of jobs to run in parallel
     :return: X_train, X_test without outliers
     """
+    # Reducing dimensionality with UMAP
+    reducer = umap.UMAP(random_state=seed)
+    embedding = reducer.fit_transform(X_train)
+
     if verbose >= 1:
         print(f"Removing outliers using {outlier_method}")
 
@@ -87,8 +92,6 @@ def remove_outliers(X_train, y_train, outlier_method, umap_enabled: bool, if_con
 
     X_train = X_train[outlier_scores != -1]
     y_train = y_train[outlier_scores != -1]
-
-    #X_train, y_train = remove_outliers_from_data(X_train, y_train, outlier_scores)
 
     if verbose >= 2:
         print(f"{'':<1} Shape of the training set: {X_train.shape}")
@@ -188,7 +191,7 @@ def preprocess(df_original: pd.DataFrame,
     # 1. Imputation
     # 2. Scaling
     preprocessing_pipeline = Pipeline(steps=[
-        ('imputation', SimpleImputer(strategy='median')),
+        #('imputation', SimpleImputer(strategy='median')),
         ('scaling', StandardScaler()),
         #('outlier_detection', IsolationForest(n_estimators=1000, contamination=contamination, n_jobs=2, random_state=seed)),
         #('variance_threshold', VarianceThreshold(threshold=0.001))
@@ -197,6 +200,8 @@ def preprocess(df_original: pd.DataFrame,
     # Imputing and scaling the data
     if verbose >= 1:
         print("Imputing and scaling the training set")
+
+    X_train = pd.read_pickle('imputer.pkl', compression='gzip')
     X_train_index = X_train.copy().index
     X_train = pd.DataFrame(preprocessing_pipeline.fit_transform(X_train, y_train), columns=X_train.columns,
                            index=X_train_index)
