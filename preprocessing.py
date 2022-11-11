@@ -14,6 +14,7 @@ import umap
 from colorama import Fore, Style
 from sklearn.cluster import DBSCAN
 from imblearn.pipeline import Pipeline
+import pickle
 
 def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbscan_min_samples: int, seed: int, verbose: int):
     """
@@ -22,20 +23,30 @@ def remove_outliers(X_train, y_train, outlier_method, contamination: float, dbsc
     :param X_test: test set
     :param outlier_method: method to use to remove outliers
     """
+    # Reducing dimensionality with UMAP
+    reducer = umap.UMAP(random_state=seed)
+    embedding = reducer.fit_transform(X_train)
+
     if verbose >= 1:
         print(f"Removing outliers using {outlier_method}")
     if outlier_method == "IsolationForest":
         outlier_scores = IsolationForest(n_estimators=1000,
                                          contamination=contamination,
                                          n_jobs=2,
-                                         random_state=seed).fit_predict(X_train)
+                                         random_state=seed).fit_predict(embedding)
     elif outlier_method == "DBSCAN":
-        outlier_scores = DBSCAN(eps=36, min_samples=dbscan_min_samples, n_jobs=2).fit_predict(X_train)
+        outlier_scores = DBSCAN(eps=36, min_samples=dbscan_min_samples, n_jobs=2).fit_predict(embedding)
 
     X_train = X_train[outlier_scores != -1]
     y_train = y_train[outlier_scores != -1]
+
     if verbose >= 2:
         print(f"{'':<1} Shape of the training set: {X_train.shape}")
+        counter = 0
+        for x in outlier_scores:
+            if x == -1:
+                counter += 1
+        print(f"Outliers removed: {counter}")
     return X_train, y_train
 
 
