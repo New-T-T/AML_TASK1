@@ -11,7 +11,6 @@ from sklearn import pipeline
 
 #preprocess parameters
 GRID_OUTLIER_METHODS = ["IsolationForest","DBSCAN"]
-GRID_FEATURE_SELECTION_METHODS = ["lasso","FDR"]
 EPS_GRID = [36, 60]     #dont go lower it will remove everything
 MIN_SAMPLES_GRID = [15, 20]  #dont go lower it will remove everything
 II_ENABLED_GRID = [ False]
@@ -23,9 +22,10 @@ FR_ET_N_GRID = [100,1000]
 #feature selection parameters
 FR_ALPHA_GRID = [0.01]  # Yves 0.01 # Maya 0.1 # Tristan 0.5
 FR_METHOD_GRID = ['FDR', 'lasso']
+FR_ET_N_GRID = [100,1000]
 
 #calculate total amount of configurations in preprocessing space
-NUMBER_CONFIGS_TOP = len(MIN_SAMPLES_GRID) * len(EPS_GRID) * len(FR_METHOD_GRID) * len(FR_ALPHA_GRID)* len(UMAP_GRID) * len(II_ENABLED_GRID) * len(FR_ET_N_GRID)
+NUMBER_CONFIGS_TOP = len(MIN_SAMPLES_GRID) * len(EPS_GRID) * len(FR_METHOD_GRID) * len(FR_ALPHA_GRID) * len(II_ENABLED_GRID) * len(FR_ET_N_GRID)
 NUMBER_CONFIGS_BOTTOM = len(ALPHA_GRID) * len(N_ESTIMATORS_GRID) * len(FR_METHOD_GRID) * len(FR_ALPHA_GRID)* len(UMAP_GRID) * len(II_ENABLED_GRID)* len(FR_ET_N_GRID)
 TOTAL_CONFIGS_PRE = NUMBER_CONFIGS_TOP + NUMBER_CONFIGS_BOTTOM
 
@@ -52,7 +52,7 @@ class custom_Gridsearch():
             for iter_enabled in II_ENABLED_GRID:
                 for method in GRID_OUTLIER_METHODS:
                     if method == "DBSCAN":
-                        for eps in EPS_GRID: # 0.5= Yves 10 = Maya 36=Tristan
+                        for eps in EPS_GRID:
                             for min_samples in MIN_SAMPLES_GRID:
                                 if umap_flag:
                                     print("skipped due to umap")
@@ -81,7 +81,7 @@ class custom_Gridsearch():
                                     self.perform_gridsearch_select_feature(X_train, X_train_test, y_train, y_train_test, param_dict)
 
 
-                    elif method == "IsolationForrest" :
+                    elif method == "IsolationForest" :
                         for n_estimators in  N_ESTIMATORS_GRID:
                             for contamination in ALPHA_GRID:
                                 X_train, X_train_test, y_train, y_train_test = preprocess(
@@ -129,21 +129,19 @@ class custom_Gridsearch():
                     best_reg = reg.gridsearchseperate(X_train,y_train)
                     best_reg.fit(X_train,y_train)
                     score = r2_score(y_train_test, best_reg.predict(X_train_test))
-                    self.counter = self.counter + 1
+
+                    param_dict.update({'method':method})
+                    param_dict.update({'alpha':alpha})
+                    param_dict.update({'et_n':et_n})
+
 
                     #if score is better than one seen so far print configuration into file and save score
                     #this is done every time one is found to keep a log in case of crashes or errors
                     if score > self.curr_score:
                         self.curr_score = score
                         self.best_model = best_reg.named_estimators_
-                        param_dict.update({method:alpha})
                         for name,estimator in best_reg.named_estimators_.items():
                             self.regressor_scores.update({name: regressor.evaluate_estimator(estimator, X_train, X_train_test, y_train, y_train_test)})
-                        """
-                        for i in range(len(best_reg.estimators_)):
-                            self.regressor_scores.update({best_reg.named_estimators_[i][0]:regressor.evaluate_estimator(best_reg.estimators_[i],X_train, X_train_test, y_train, y_train_test)})
-                        self.best_params_pre = param_dict
-                        """
 
                         file1 = open("data/best_params_custom_Yves.txt", "a")  # write mode
                         file1.write("Config Start \n")
@@ -153,11 +151,14 @@ class custom_Gridsearch():
                         file1.write("Regressor scores:" + str(self.regressor_scores) + "\n")
                         file1.write("Config End \n")
                         file1.close()
+                    
 
                     #write progress of gridsearch into file
                     #has to be done to a file since because there is too much console output, and keeps track of
+                    self.counter = self.counter + 1
                     file1 = open("data/best_params_custom_Yves.txt", "a")  # write mode
-                    file1.write("Executed configurations: " + str(self.counter) + "/" + str(TOTAL_CONFIGS_PRE * reg.number_config) + "\n")
-                    file1.write("score:" + str(score) + "\n")
-                    file1.write("preprocessing params:" +str(param_dict)+"\n")
+                    #file1.write("Executed configurations: " + str(self.counter) + "/" + str(TOTAL_CONFIGS_PRE * reg.number_config) + "\n")
+                    file1.write("Executed configurations: " + str(self.counter) + "/" + str(TOTAL_CONFIGS_PRE )+  "  "+  str(NUMBER_CONFIGS_TOP)+ "   " + str(NUMBER_CONFIGS_BOTTOM) + "\n")
+                    #file1.write("score:" + str(score) + "\n")
+                    #file1.write("preprocessing params:" +str(param_dict)+"\n")
                     file1.close()
