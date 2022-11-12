@@ -131,7 +131,7 @@ class StackedRegressor():
     def __init__(self):
         self.regressor = StackingRegressor(estimators=BEST_ESTIMATORS , final_estimator=RidgeCV(),verbose=3)
         self.best_params = []
-        self.number_config = NUMBER_CONFIG_REGRESSORS
+        self.number_config = 1
 
     #performs grid search on the parameter space
     #this is the whole parameter space, takes too long
