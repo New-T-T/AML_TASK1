@@ -85,7 +85,7 @@ def remove_outliers(X_train, y_train, outlier_method, umap_enabled: bool, if_con
     elif outlier_method == "DBSCAN":
         if umap_enabled:
             outlier_scores = DBSCAN(eps=dbs_eps, min_samples=dbs_min_samples,
-                               n_jobs=n_jobs).fit_predict(embedding.embedding_)
+                               n_jobs=n_jobs).fit_predict(embedding)
         else:
             outlier_scores = DBSCAN(eps=dbs_eps, min_samples=dbs_min_samples,
                                 n_jobs=n_jobs).fit_predict(X_train)
