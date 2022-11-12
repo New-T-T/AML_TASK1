@@ -106,14 +106,14 @@
     - [ ] SFS 
     - [ ] FDR
 - Yves
-  - [ ] GridSearch including preprocessing
+  - [X] GridSearch including preprocessing
   - [ ]	Optimize for meta regressor (the RidgeCV combining the estimators)
   - [ ] Execute extensive GridSearch per regressor >> just extending, narrowing the search space manually since the space is just too big
   - [ ] Find Best combination for Stacking
-  - [ ] Look into non converging Regressors >> probaly just because of poor parameter choice
-     - [ ] RidgeCV
-     - [ ] SVR
-     - [ ] ElastiNet
+  - [X] Look into non converging Regressors >> probaly just because of poor parameter choice
+     - [X] RidgeCV
+     - [X] SVR
+     - [X] ElastiNet
   - Clean Code
   - [optional]
   	- Stacking of StackingRegressors >> I belive this is what Team 1 did from last year
