@@ -21,7 +21,7 @@ UMAP_GRID = [False,True]
 FR_ET_N_GRID = [100,1000]
 
 #feature selection parameters
-FR_ALPHA_GRID = [0.01, 0.1, 0.5]  # Yves 0.01 # Maya 0.1 # Tristan 0.5
+FR_ALPHA_GRID = [0.01]  # Yves 0.01 # Maya 0.1 # Tristan 0.5
 FR_METHOD_GRID = ['FDR', 'lasso']
 
 #calculate total amount of configurations in preprocessing space
@@ -144,6 +144,7 @@ class custom_Gridsearch():
                             self.regressor_scores.update({best_reg.named_estimators_[i][0]:regressor.evaluate_estimator(best_reg.estimators_[i],X_train, X_train_test, y_train, y_train_test)})
                         self.best_params_pre = param_dict
                         """
+
                         file1 = open("data/best_params_custom_Yves.txt", "a")  # write mode
                         file1.write("Config Start \n")
                         file1.write("Curr_score:" + str(self.curr_score) + "\n")
@@ -157,6 +158,6 @@ class custom_Gridsearch():
                     #has to be done to a file since because there is too much console output, and keeps track of
                     file1 = open("data/best_params_custom_Yves.txt", "a")  # write mode
                     file1.write("Executed configurations: " + str(self.counter) + "/" + str(TOTAL_CONFIGS_PRE * reg.number_config) + "\n")
-                    file1.write("score:" + str(score))
-                    file1.write("preprocessing params:" +str(param_dict))
+                    file1.write("score:" + str(score) + "\n")
+                    file1.write("preprocessing params:" +str(param_dict)+"\n"")
                     file1.close()
