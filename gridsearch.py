@@ -130,9 +130,9 @@ class custom_Gridsearch():
                     best_reg.fit(X_train,y_train)
                     score = r2_score(y_train_test, best_reg.predict(X_train_test))
 
-                    param_dict.update({'method':method})
-                    param_dict.update({'alpha':alpha})
-                    param_dict.update({'et_n':et_n})
+                    param_dict.add(('method',method))
+                    param_dict.add(('alpha',alpha))
+                    param_dict.add(('et_n',et_n))
 
 
                     #if score is better than one seen so far print configuration into file and save score
