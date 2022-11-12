@@ -28,12 +28,12 @@ ESTIMATORS = [
     #('svr', LinearSVR(random_state=42)),                   #not converging  # not linearly seperable
     ('xgb', XGBRegressor()),
     ('ada', AdaBoostRegressor()),
-    ('gauss', GaussianProcessRegressor()),
+    #('gauss', GaussianProcessRegressor()),
     ('gradient_regressor', GradientBoostingRegressor()),
     ('lgbm', LGBMRegressor()),
     ('cat', CatBoostRegressor()),
     #('elastic_net', ElasticNet()),                          #not converging
-    ('bay_ridge', BayesianRidge()),
+    #('bay_ridge', BayesianRidge()),
     #('kernel_ridge', KernelRidge())                          #not converging
 ]
 
@@ -76,12 +76,12 @@ GS_PARAMS_SPLIT_TEST = [
     #("svr", {"epsilon": [0, 0.01, 0.1, 0.3], "C": [1]}),
     ("xgb", {"learning_rate": [ 0.03],"n_estimators":[ 4000],"max_depth":[8],"colsample_bytree":[0.8],"reg_lambda": [0.01],"subsample": [0.4],"min_child_weight": [2]}),
     ('ada', {"n_estimators": [1000],"learning_rate":[1]}),
-    ('gauss', {"kernel":[DotProduct() + WhiteKernel()]}),
+    #('gauss', {"kernel":[DotProduct() + WhiteKernel()]}),
     ('gradient_regressor', {"n_estimators":[100]}),
     ('lgbm', { 'n_estimators': [24],'num_leaves': [16], 'boosting_type' : ['gbdt'],'colsample_bytree' : [ 0.65],'subsample' : [0.7],'reg_alpha' : [1.2],'reg_lambda' : [1.2]}),
     ('cat', {'learning_rate': [ 0.1], 'depth': [ 6], 'l2_leaf_reg': [3, 5, 7]}),
     #('elastic_net', {'l1_ratio': [0,1,30]}),
-    ('bay_ridge', {'n_iter':[300], 'alpha_1':[1e-07],'alpha_2':[1e-05],'lambda_1':[1e-05],'lambda_2':[1e-07]}),
+    #('bay_ridge', {'n_iter':[300], 'alpha_1':[1e-07],'alpha_2':[1e-05],'lambda_1':[1e-05],'lambda_2':[1e-07]}),
     #('kernel_ridge', {})
 ]
 #count numbers of configurations, since seperate is enabled this is the amout of times the GridSearchCV will run per preprocessing configuration
@@ -89,7 +89,7 @@ NUMBER_CONFIG_REGRESSORS = (3*3*3) + (3*3) + (1) + (2) +(3 * 4) + (3*3*3) +(2*2*
 GS_PARAMS_SPLIT = [
     #("lr", {}),
     #("svr", {"epsilon": [0, 0.01, 0.1, 0.3], "C": [1]}),
-    ("xgb", {"learning_rate": [ 0.01,0.03,0.1],"n_estimators":[2500, 4000, 6000],"max_depth":[4,8,10],"colsample_bytree":[0.8],"reg_lambda": [0.01],"subsample": [0.4],"min_child_weight": [2]}),
+    ("xgb", {"learning_rate": [ 0.03,0.1],"n_estimators":[2500, 4000, 6000],"max_depth":[4,8,10],"colsample_bytree":[0.8],"reg_lambda": [0.01],"subsample": [0.4],"min_child_weight": [2]}),
     ('ada', {"n_estimators": [100,1000,2000],"learning_rate":[0.1,1,10]}),
     ('gauss', {"kernel":[DotProduct() + WhiteKernel()]}),
     ('gradient_regressor', {"n_estimators":[10,100]}),
