@@ -159,5 +159,5 @@ class custom_Gridsearch():
                     file1 = open("data/best_params_custom_Yves.txt", "a")  # write mode
                     file1.write("Executed configurations: " + str(self.counter) + "/" + str(TOTAL_CONFIGS_PRE * reg.number_config) + "\n")
                     file1.write("score:" + str(score) + "\n")
-                    file1.write("preprocessing params:" +str(param_dict)+"\n"")
+                    file1.write("preprocessing params:" +str(param_dict)+"\n")
                     file1.close()
